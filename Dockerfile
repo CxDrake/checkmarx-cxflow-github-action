@@ -1,14 +1,18 @@
 # Use CxFlow Base image (non-root)
 FROM itskedar/mycxflow:00240099
 
-# Use working directory owned by non-root
-WORKDIR /app
+# Temporarily switch to root to set permissions
+USER root
 
-# Copy scripts with correct permissions already set on host machine
-COPY --chown=nonroot:nonrootgroup scripts/keytool-import-certs.sh ./keytool-import-certs.sh
-COPY --chown=nonroot:nonrootgroup entrypoint.sh ./entrypoint.sh
+# Copy scripts
+COPY scripts/keytool-import-certs.sh /app/keytool-import-certs.sh
+COPY entrypoint.sh /app/entrypoint.sh
 
-# No need for chmod if files are already executable
-# If needed, do chmod in entrypoint.sh instead
+# Set executable permissions (only root can do this)
+RUN chmod +x /app/keytool-import-certs.sh /app/entrypoint.sh && \
+    chown nonroot:nonrootgroup /app/keytool-import-certs.sh /app/entrypoint.sh
+
+# Switch back to non-root
+USER nonroot
 
 ENTRYPOINT ["./entrypoint.sh"]
